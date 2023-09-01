@@ -42,3 +42,6 @@ Resources:
           DB_HOST: qa-mongoose.ckcv0ldemjbo.us-east-2.rds.amazonaws.com
           DB_PORT: 3306
           DB_PASSWORD: nshQKYpBscmMSahCySS0IUvYkPIMFjW8dJTFncH9pc8Rejq
+          PDFGENERATOR_SECRET: e913768c16ae820ce7d13ee247c1dcbee5b9357bfe39ad4eda6d5a7bc0bedd70
+          PDFGENERATOR_API_KEY: 79791e4996ff7bdf873fd38d4ca2fec42c9a92db162438c4d057f416fb59fdf0
+          PDFGENERATOR_WORKSPACE_ID: ali.maqsood93@gmail.com

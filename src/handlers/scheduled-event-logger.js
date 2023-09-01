@@ -1,16 +1,17 @@
-import * as mysql2 from 'mysql2/promise';
-import queries from '../utils/queries.js';
-const { notesQuery, photosQuery, damagesQuery, equipmentQuery, atmosphericLogsQuery } = queries;
+import * as mysql2 from 'mysql2/promise.js';
+// import queries from '../utils/queries.js';
+// const { notesQuery, photosQuery, damagesQuery, equipmentQuery, atmosphericLogsQuery } = queries;
 
 import axios from 'axios';
 import jwt from 'jsonwebtoken'
 
 import { PDFDocument } from 'pdf-lib';
-import { getDocument } from 'pdfjs-dist';
+import pkg from 'pdfjs-dist';
+const { getDocument } = pkg;
 pdfjsLib.GlobalWorkerOptions.workerSrc = "pdfjs-dist/build/pdf.worker.js"
 
-import photoRepData from '../../test-data/test123.json'
-import dryRepData from '../../test-data/rocketdry.json'
+import photoRepData from '../../test-data/test123.json' assert { type: 'json' };
+import dryRepData from '../../test-data/rocketdry.json' assert { type: 'json' };
 
 function generateJWT() {
     const workspaceIdentifier = 'ali.maqsood93@gmail.com'
