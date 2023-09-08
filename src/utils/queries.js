@@ -33,7 +33,7 @@ DATE(updated_at) = CURDATE() OR
 DATE(deleted_at) = CURDATE();
 `;
 
-module.exports = {
+export default {
     notesQuery,
     photosQuery,
     damagesQuery,

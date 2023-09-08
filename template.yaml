@@ -24,7 +24,7 @@ Resources:
       Runtime: nodejs18.x
       Architectures:
         - x86_64
-      Handler: src/handlers/scheduled-event-logger.scheduledEventLoggerHandler
+      Handler: src/handlers/rp-st-automation.handler
       # This property associates this Lambda function with a scheduled CloudWatch Event. For all available properties, see
       # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#schedule
       # This example runs every hour.
@@ -45,3 +45,9 @@ Resources:
           PDFGENERATOR_SECRET: e913768c16ae820ce7d13ee247c1dcbee5b9357bfe39ad4eda6d5a7bc0bedd70
           PDFGENERATOR_API_KEY: 79791e4996ff7bdf873fd38d4ca2fec42c9a92db162438c4d057f416fb59fdf0
           PDFGENERATOR_WORKSPACE_ID: ali.maqsood93@gmail.com
+          RP_PASSWORD: P@$$w0rd
+          RP_USERNAME: alitest123@yopmail.com
+          S3_BUCKET_NAME: storage-qa-mongoose-br2wu78v1.rocketplantech.com
+          ST_CLIENT_ID: cid.mvbp31sh9xpdd4gnq8t4mg6u4
+          ST_CLIENT_SECRET: cs1.tx75mexv0vqtyclzpmj7u5r775somry21gxg6ybki416kqghkg
+          ST_APP_KEY: ak1.3att89vhhsoeulmdls0drgtje

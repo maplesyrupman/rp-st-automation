@@ -1,0 +1,12 @@
+/usr/lib/python3/dist-packages/paramiko/transport.py:236: CryptographyDeprecationWarning: Blowfish has been deprecated
+  "class": algorithms.Blowfish,
+Invoking src/handlers/rp-st-automation.handler (nodejs18.x)
+Local image is up-to-date
+Using local image: public.ecr.aws/lambda/nodejs:18-rapid-x86_64.
+
+Mounting /home/william/rp-st-automation as /var/task:ro,delegated, inside runtime container
+START RequestId: c1616859-29c2-4e37-821e-1b509717389b Version: $LATEST
+2023-09-08T20:28:52.741Z	c1616859-29c2-4e37-821e-1b509717389b	INFO	{ fileName: 'test.pdf' }
+END RequestId: c1616859-29c2-4e37-821e-1b509717389b
+REPORT RequestId: c1616859-29c2-4e37-821e-1b509717389b	Init Duration: 0.05 ms	Duration: 1193.35 ms	Billed Duration: 1194 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+null
