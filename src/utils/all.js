@@ -81,9 +81,10 @@ async function splitPDF(pdfBuffer, ranges) {
     return splittedBuffers;
 }
 
+// AND deleted_at IS NULL
 function getProjectsQuery(projectIds) {
     const placeholders = projectIds.map(() => '?').join(',');
-    return `SELECT id, created_by FROM projects WHERE id IN (${placeholders});`;
+    return `SELECT id, created_by FROM projects WHERE id IN (${placeholders}) AND deleted_at IS NULL;`;
 }
 
 function getCreateReportsQuery() {
@@ -161,6 +162,7 @@ async function getPreReportData(connection) {
     const [todaysEquipment] = await connection.execute(equipmentQuery);
     const [todaysAtmosphericLogs] = await connection.execute(atmosphericLogsQuery);
 
+    // include created_at, deleted_at and updated_at from todays_x queries 
     const needPhotoReportIds = Array.from(new Set([...todaysNotes, ...todaysPhotos, ...todaysDamageCauses].map(project => project.project_id)))
     const needDryingReportIds = Array.from(new Set([...todaysEquipment, ...todaysAtmosphericLogs].map(project => project.project_id)))
 
