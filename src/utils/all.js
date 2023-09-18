@@ -5,8 +5,9 @@ import pkg from 'pdfjs-dist';
 const { getDocument } = pkg;
 pdfjsLib.GlobalWorkerOptions.workerSrc = "pdfjs-dist/build/pdf.worker.js"
 import queries from '../utils/queries.js';
-const { notesQuery, photosQuery, damagesQuery, equipmentQuery, atmosphericLogsQuery } = queries;
+const { notesQuery, photosQuery, damagesQuery, equipmentQuery, atmosphericLogsQuery, todaysReportsQuery } = queries;
 import aws from 'aws-sdk'
+import axios from 'axios'
 
 function generateJWT() {
     const workspaceIdentifier = process.env.PDFGENERATOR_WORKSPACE_ID
@@ -83,20 +84,18 @@ async function splitPDF(pdfBuffer, ranges) {
 
 // AND deleted_at IS NULL
 function getProjectsQuery(projectIds) {
-    const placeholders = projectIds.map(() => '?').join(',');
+    const placeholders = projectIds.map(p => p.project_id).join(',');
     return `SELECT id, created_by FROM projects WHERE id IN (${placeholders}) AND deleted_at IS NULL;`;
 }
 
-function getCreateReportsQuery() {
-    let placeholders = [];
+function getCreateReportsQuery(records) {
     let values = [];
 
     records.forEach(record => {
-        placeholders.push("(?, ?, ?, 'Processing')");
-        values.push(record.created_by, record.project_id, record.name);
+        values.push(`(${record.created_by}, ${record.project_id}, '${record.name}', 'Processing')`);
     });
 
-    let sql = `INSERT INTO reports (created_by, project_id, name, status) VALUES ${placeholders.join(", ")}`;
+    return `INSERT INTO reports (created_by, project_id, name, status) VALUES ${values.join(", ")}`;
 }
 
 function getTodaysDate() {
@@ -105,7 +104,7 @@ function getTodaysDate() {
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const yyyy = today.getFullYear();
 
-    return `${dd}/${mm}/${yyyy}`;
+    return `${dd}-${mm}-${yyyy}`;
 }
 
 const s3 = new aws.S3();
@@ -144,15 +143,28 @@ async function uploadReportToST(file, fileName, jobId, stAuthToken) {
     const formData = new FormData();
     formData.append('file', file, { filename: fileName, contentType: 'application/pdf' });
 
-    const {data} = await axios.post(`https://api-integration.servicetitan.io/forms/v2/tenant/1037187629/jobs/${jobId}/attachments`, formData, {
+    const { data } = await axios.post(`https://api-integration.servicetitan.io/forms/v2/tenant/1037187629/jobs/${jobId}/attachments`, formData, {
         headers: {
             ...formData.getHeaders(),
-            "ST-App-Key": process.env.ST_APP_KEY, 
+            "ST-App-Key": process.env.ST_APP_KEY,
             "Authorization": stAuthToken
         }
     });
 
     return data
+}
+
+function isOlder(date1, date2) {
+    return new Date(date1) < new Date(date2);
+}
+
+function isReportNeeded(r, todaysReports) {
+    const report = todaysReports.find(report => report.project_id === r.project_id)
+    let needReportGenerated = report === undefined ||
+        isOlder(report.created_at, r.created_at) ||
+        isOlder(report.created_at, r.updated_at) ||
+        isOlder(report.created_at, r.deleted_at)
+    return needReportGenerated
 }
 
 async function getPreReportData(connection) {
@@ -162,17 +174,46 @@ async function getPreReportData(connection) {
     const [todaysEquipment] = await connection.execute(equipmentQuery);
     const [todaysAtmosphericLogs] = await connection.execute(atmosphericLogsQuery);
 
+    const [todaysReports] = await connection.execute(todaysReportsQuery);
+    console.log("todaysReports", todaysReports)
+
     // include created_at, deleted_at and updated_at from todays_x queries 
-    const needPhotoReportIds = Array.from(new Set([...todaysNotes, ...todaysPhotos, ...todaysDamageCauses].map(project => project.project_id)))
-    const needDryingReportIds = Array.from(new Set([...todaysEquipment, ...todaysAtmosphericLogs].map(project => project.project_id)))
+    const needPhotoReportIds = [...todaysNotes, ...todaysPhotos, ...todaysDamageCauses].map(p => {
+        const record = {
+            project_id: p.project_id,
+            created_at: p.created_at,
+            deleted_at: p.deleted_at,
+            updated_at: p.updated_at
+        }
+        return record
+    }).filter(r => isReportNeeded(r, todaysReports))
+
+    const needDryingReportIds = [...todaysEquipment, ...todaysAtmosphericLogs].map(p => {
+        const record = {
+            project_id: p.project_id,
+            created_at: p.created_at,
+            deleted_at: p.deleted_at,
+            updated_at: p.updated_at
+        }
+        return record
+    }).filter(r => isReportNeeded(r, todaysReports))
 
     const photoRepQuery = getProjectsQuery(needPhotoReportIds)
     const dryingRepQuery = getProjectsQuery(needDryingReportIds)
 
     const todaysDate = getTodaysDate()
 
-    const [projectsNeedingPhotoRep] = await connection.execute(photoRepQuery, needPhotoReportIds)
-    const [projectsNeedingDryingRep] = await connection.execute(dryingRepQuery, needDryingReportIds)
+    let projectsNeedingPhotoRep = [];
+    let projectsNeedingDryingRep = [];
+    if (needPhotoReportIds.length > 0) {
+        [projectsNeedingPhotoRep] = await connection.execute(photoRepQuery, needPhotoReportIds);
+    }
+    if (needDryingReportIds.length > 0) {
+        [projectsNeedingDryingRep] = await connection.execute(dryingRepQuery, needDryingReportIds);
+    }
+
+    console.log("projectsNeedingPhotoRep", projectsNeedingPhotoRep)
+    console.log("projectsNeedingDryingRep", projectsNeedingDryingRep)
 
     const preReportData = [...projectsNeedingDryingRep.map(d => {
         const name = `${d.id}-dry-${todaysDate}`
@@ -188,23 +229,18 @@ async function getPreReportData(connection) {
         return { name, created_by, project_id, settings: { format: 'compact' } }
     })]
 
-    return preReportData
+    return {
+        preReportData, 
+        totalDrying: projectsNeedingDryingRep.length,
+    }
 }
 
 async function getReportIds(connection, preReportData) {
-    const values = []
-    const placeholders = []
+    const sql = getCreateReportsQuery(preReportData)
+    // console.log('sql', sql)
 
-    preReportData.forEach(record => {
-        placeholders.push("(?, ?, ?, ?, 'Processing')");
-        values.push(record.created_by, record.project_id, record.name, record.settings);
-    });
-
-    let sql = `INSERT INTO reports (created_by, project_id, name, settings, status) VALUES ${placeholders.join(", ")};`;
-
-    const [reports] = await connection.execute(sql, values)
+    const [reports] = await connection.execute(sql)
     const { affectedRows, insertId } = reports
-    console.log(reports)
 
     const reportIds = []
     for (let i = insertId; i > insertId - affectedRows; i--) {
@@ -213,7 +249,21 @@ async function getReportIds(connection, preReportData) {
     return reportIds
 }
 
-export default {
+async function getReportJsonData(reportIds) {
+    const { data } = await axios.post('https://api-qa-mongoose-br2wu78v1.rocketplantech.com/api/batch-reports',
+        { reports: reportIds },
+        {
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${await getPersonalAccessToken()}`
+            }
+        }
+    )
+    return data.reportJSONData
+}
+
+export {
     generateJWT,
     extractTextFromPdf,
     getSubPdfIndices,
@@ -224,5 +274,6 @@ export default {
     getSTToken,
     uploadReportToST,
     getPreReportData,
-    getReportIds
+    getReportIds,
+    getReportJsonData
 }

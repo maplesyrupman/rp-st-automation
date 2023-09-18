@@ -5,8 +5,11 @@ Local image is up-to-date
 Using local image: public.ecr.aws/lambda/nodejs:18-rapid-x86_64.
 
 Mounting /home/william/rp-st-automation as /var/task:ro,delegated, inside runtime container
-START RequestId: c1616859-29c2-4e37-821e-1b509717389b Version: $LATEST
-2023-09-08T20:28:52.741Z	c1616859-29c2-4e37-821e-1b509717389b	INFO	{ fileName: 'test.pdf' }
-END RequestId: c1616859-29c2-4e37-821e-1b509717389b
-REPORT RequestId: c1616859-29c2-4e37-821e-1b509717389b	Init Duration: 0.05 ms	Duration: 1193.35 ms	Billed Duration: 1194 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
-null
+START RequestId: f0e1b4a6-fba8-4b50-8120-9c101bdb5584 Version: $LATEST
+2023-09-18T01:13:36.936Z	f0e1b4a6-fba8-4b50-8120-9c101bdb5584	INFO	todaysReports []
+2023-09-18T01:13:37.056Z	f0e1b4a6-fba8-4b50-8120-9c101bdb5584	INFO	projectsNeedingPhotoRep [  { id: 3643, created_by: 763 },  { id: 3663, created_by: 763 },  { id: 3716, created_by: 763 }]
+2023-09-18T01:13:37.057Z	f0e1b4a6-fba8-4b50-8120-9c101bdb5584	INFO	projectsNeedingDryingRep [ { id: 3235, created_by: 766 } ]
+2023-09-18T16:45:34.276Z	f0e1b4a6-fba8-4b50-8120-9c101bdb5584	ERROR	Invoke Error 	{"errorType":"TypeError","errorMessage":"Cannot read properties of undefined (reading 'data')","stack":["TypeError: Cannot read properties of undefined (reading 'data')","    at Runtime.handler (file:///var/task/src/handlers/rp-st-automation.js:85:53)","    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)"]}
+END RequestId: f0e1b4a6-fba8-4b50-8120-9c101bdb5584
+REPORT RequestId: f0e1b4a6-fba8-4b50-8120-9c101bdb5584	Init Duration: 0.13 ms	Duration: 126571.09 ms	Billed Duration: 126572 ms	Memory Size: 128 MB	Max Memory Used: 128 MB	
+{"errorType": "TypeError", "errorMessage": "Cannot read properties of undefined (reading 'data')", "trace": ["TypeError: Cannot read properties of undefined (reading 'data')", "    at Runtime.handler (file:///var/task/src/handlers/rp-st-automation.js:85:53)", "    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)"]}
