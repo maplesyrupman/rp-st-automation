@@ -66,20 +66,19 @@ export const handler = async (event, context) => {
             },
         )
 
-        console.log('test', data === undefined)
         // //convert base64 to stream
-        const binaryData = Buffer.from(data.response, 'base64');
-        const pdfBuffer = new Uint8Array(binaryData);
+        // const binaryData = Buffer.from(data.response, 'base64');
+        // const pdfBuffer = new Uint8Array(binaryData);
 
-        const pages = await extractTextFromPdf(pdfBuffer)
-        const pageType = pages.map(page => {
-            return page.includes('Powered by RocketPlan Technologies') ? 'page' : 'cover'
-        })
+        // const pages = await extractTextFromPdf(pdfBuffer)
+        // const pageType = pages.map(page => {
+        //     return page.includes('Powered by RocketPlan Technologies') ? 'page' : 'cover'
+        // })
 
-        const subPDFIndices = getSubPdfIndices(pageType)
-        const splittedBuffers = await splitPDF(binaryData, subPDFIndices)//must use binaryData  
+        // const subPDFIndices = getSubPdfIndices(pageType)
+        // const splittedBuffers = await splitPDF(binaryData, subPDFIndices)//must use binaryData  
         
-        console.log("number of reports: ", splittedBuffers.length)
+        // console.log("number of reports: ", splittedBuffers.length)
 
     } catch (error) {
         console.error(JSON.stringify(error.response.data, null, 2));
